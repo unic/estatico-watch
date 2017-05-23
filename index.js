@@ -4,7 +4,7 @@ const defaults = {
   task: {
     name: null,
     fn: null,
-    config: {},
+    config: {}
   },
   once: false,
   watcher: {
@@ -20,24 +20,29 @@ const fn = (options) => {
   const prettyTime = require('pretty-hrtime')
 
   const config = merge({}, defaults, options)
+
+  if (!config.task.config.watch) {
+    return log(chalk.red('No watch path specified'))
+  }
+
   const watcher = watch(config.task.config.watch, config.watcher)
 
-  watcher.on('all', function(event, path) {
-    var taskConfig = merge({}, config.task.config, {
+  watcher.on('all', function (event, path) {
+    const taskConfig = merge({}, config.task.config, {
       watcher: {
         event,
         path
       }
-    }),
-      start = process.hrtime(),
-      end,
-      time
+    })
+    const start = process.hrtime()
+    let end
+    let time
 
     // Log duration analogously to how gulp.start would do it
     log('Starting', '\'' + chalk.cyan(config.task.name) + '\'...')
 
     // Explicitly run task function and provide changed file as parameter
-    config.task.fn(taskConfig, function() {
+    config.task.fn(taskConfig, function () {
       end = process.hrtime(start)
       time = prettyTime(end)
 
@@ -49,23 +54,10 @@ const fn = (options) => {
     if (config.once) {
       watcher.close()
     }
-  });
+  })
 
   return watcher
 }
-
-// fn({
-//   task: {
-//     config: {
-//       watch: '.'
-//     },
-//     fn: function(config, cb) {
-//       console.log(config.watcher);
-//       cb();
-//     },
-//     name: 'yay'
-//   }
-// })
 
 module.exports = {
   name,
