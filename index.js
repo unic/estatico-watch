@@ -1,11 +1,27 @@
+const merge = require('lodash.merge')
+
 const defaults = {
   usePolling: false
 }
 
 // In order for gulp-cli to pick up the watcher, we need to pass the instance from gulpfile.js
 const fn = (config, gulp, options) => {
-  if (!(options && options.task && options.task.config && options.task.config.watch)) {
-    return new Error('No watch path specified')
+  options = merge({
+    task: {
+      config: {}
+    }
+  }, options)
+
+  if (!options.task.config.watch) {
+    throw new Error('No watch path specified')
+  }
+
+  if (!options.task.fn) {
+    throw new Error('No task function specified')
+  }
+
+  if (!options.name) {
+    throw new Error('No task name specified')
   }
 
   // Create named callback function for gulp-cli to be able to log it
@@ -42,8 +58,6 @@ const fn = (config, gulp, options) => {
 }
 
 module.exports = (options, gulp) => {
-  const merge = require('lodash.merge')
-
   const config = merge({}, defaults, options)
 
   return {
