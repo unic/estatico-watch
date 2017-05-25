@@ -1,32 +1,18 @@
-const name = 'watch'
-
 const defaults = {
-  task: {
-    name: null,
-    fn: null,
-    config: {}
-  },
-  once: false,
-  watcher: {
-    usePolling: false
-  }
+  usePolling: false
 }
 
 // In order for gulp-cli to pick up the watcher, we need to pass the instance from gulpfile.js
-const fn = (options, gulp) => {
-  const merge = require('lodash.merge')
-
-  const config = merge({}, defaults, options)
-
-  if (!config.task.config.watch) {
+const fn = (config, gulp, options) => {
+  if (!(options && options.task && options.task.config && options.task.config.watch)) {
     return new Error('No watch path specified')
   }
 
   // Create named callback function for gulp-cli to be able to log it
   let cb = {
-    [config.task.name] () {
+    [options.name] () {
       // Run task function with queued events as parameter
-      const task = config.task.fn(config.task.config, events)
+      const task = options.task.fn(events)
 
       // Reset events
       events = []
@@ -35,7 +21,7 @@ const fn = (options, gulp) => {
     }
   }
 
-  const watcher = gulp.watch(config.task.config.watch, config.watcher, cb[config.task.name])
+  const watcher = gulp.watch(options.task.config.watch, config, cb[options.name])
 
   let events = []
 
@@ -55,8 +41,14 @@ const fn = (options, gulp) => {
   return watcher
 }
 
-module.exports = {
-  name,
-  fn,
-  defaults
+module.exports = (options, gulp) => {
+  const merge = require('lodash.merge')
+
+  const config = merge({}, defaults, options)
+
+  return {
+    defaults,
+    config,
+    fn: fn.bind(null, config, gulp)
+  }
 }
